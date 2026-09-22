@@ -1,0 +1,115 @@
+{
+  "info": {
+    "name": "Finance Auth API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"Test123!@#\",\n    \"name\": \"Test User\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/auth/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"Test123!@#\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Verify Email",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8080/api/auth/verify?token=YOUR_TOKEN_HERE",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "auth", "verify"],
+          "query": [
+            {
+              "key": "token",
+              "value": "YOUR_TOKEN_HERE"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Forgot Password",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "http://localhost:8080/api/auth/forgot-password?email=test@example.com",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "auth", "forgot-password"],
+          "query": [
+            {
+              "key": "email",
+              "value": "test@example.com"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Reset Password",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "http://localhost:8080/api/auth/reset-password?token=YOUR_TOKEN_HERE&newPassword=NewTest123!@#",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "auth", "reset-password"],
+          "query": [
+            {
+              "key": "token",
+              "value": "YOUR_TOKEN_HERE"
+            },
+            {
+              "key": "newPassword",
+              "value": "NewTest123!@#"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

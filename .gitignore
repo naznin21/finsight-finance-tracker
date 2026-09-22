@@ -1,0 +1,27 @@
+# IDE & Editor files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backend Build artifacts
+backend/target/
+backend/.mvn/
+backend/*.log
+
+# Frontend Build artifacts & dependencies
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/*.log
+
+# Logs & Temp files
+*.log
+scratch/
+tmp/

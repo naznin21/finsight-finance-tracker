@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-bg text-slate-100;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer components {
+  /* Inputs */
+  .input {
+    @apply w-full bg-panel2 border border-line rounded-lg px-3 py-2.5 text-sm text-slate-100
+           placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/60 focus:border-accent
+           transition;
+  }
+  .label {
+    @apply block text-xs font-medium text-muted mb-1.5;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-accent text-[#04222b] rounded-lg px-4 py-2.5 text-sm font-semibold
+           hover:bg-accentDark transition disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-panel2 border border-line text-slate-200 rounded-lg px-4 py-2.5 text-sm font-medium
+           hover:bg-line transition;
+  }
+  .btn-danger-link {
+    @apply text-expense text-xs hover:underline;
+  }
+  .btn-edit-link {
+    @apply text-accent text-xs hover:underline;
+  }
+
+  /* Cards / surfaces */
+  .card {
+    @apply bg-panel border border-line rounded-2xl p-5;
+  }
+
+  /* Tables */
+  .table-head {
+    @apply bg-panel2 text-muted text-xs uppercase tracking-wide;
+  }
+  .table-row {
+    @apply border-t border-line hover:bg-panel2/60 transition;
+  }
+
+  /* Nav pill (sidebar) */
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted
+           hover:bg-panel2 hover:text-slate-100 transition;
+  }
+  .nav-link-active {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           bg-accent/15 text-accent;
+  }
+
+  .badge-income {
+    @apply px-2 py-0.5 rounded-full text-xs font-medium bg-income/15 text-income;
+  }
+  .badge-expense {
+    @apply px-2 py-0.5 rounded-full text-xs font-medium bg-expense/15 text-expense;
+  }
+}
