@@ -19,6 +19,10 @@ export default function LoginPage() {
       // Clear the state to prevent showing again on refresh
       window.history.replaceState({}, document.title)
     }
+    const params = new URLSearchParams(location.search)
+    if (params.get('expired') === 'true') {
+      toast.error('Your session has expired. Please log in again.')
+    }
   }, [location])
 
   const handleSubmit = async (e) => {

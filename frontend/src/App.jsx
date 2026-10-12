@@ -22,6 +22,7 @@ import AccountsPage from './pages/AccountsPage'
 import CashFlowPage from './pages/CashFlowPage'
 import ExperimentsPage from './pages/ExperimentsPage'
 import RecurringPage from './pages/RecurringPage'
+import SettingsPage from './pages/SettingsPage'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="/cash-flow" element={<PrivateRoute><CashFlowPage /></PrivateRoute>} />
           <Route path="/experiments" element={<PrivateRoute><ExperimentsPage /></PrivateRoute>} />
           <Route path="/recurring" element={<PrivateRoute><RecurringPage /></PrivateRoute>} />
+          <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

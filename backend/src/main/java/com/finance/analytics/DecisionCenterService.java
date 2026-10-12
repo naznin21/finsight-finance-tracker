@@ -1,5 +1,7 @@
 package com.finance.analytics;
 
+import com.finance.account.Account;
+import com.finance.account.AccountRepository;
 import com.finance.goal.GoalRepository;
 import com.finance.goal.SavingsGoal;
 import com.finance.transaction.TransactionRepository;
@@ -25,6 +27,7 @@ public class DecisionCenterService {
     private final GoalRepository goalRepository;
     private final FinancialHealthService financialHealthService;
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
 
     private User currentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -50,7 +53,17 @@ public class DecisionCenterService {
         }
 
         BigDecimal monthlySavings = income.subtract(expense);
-        BigDecimal currentSurplus = monthlySavings;
+
+        // Calculate total liquid funds across active accounts
+        List<Account> accounts = accountRepository.findByUserAndActiveTrue(user);
+        BigDecimal totalLiquidBalance = accounts.stream()
+                .map(a -> a.getCurrentBalance() != null ? a.getCurrentBalance() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // If no accounts yet, default to monthly net savings if positive
+        if (totalLiquidBalance.compareTo(BigDecimal.ZERO) == 0 && monthlySavings.compareTo(BigDecimal.ZERO) > 0) {
+            totalLiquidBalance = monthlySavings;
+        }
 
         BigDecimal purchase = req.getAmount() != null ? req.getAmount() : BigDecimal.ZERO;
 
@@ -72,41 +85,67 @@ public class DecisionCenterService {
             goalDelayMonths = purchase.divide(monthlySavings, 2, RoundingMode.HALF_UP).doubleValue();
         }
 
+        // Emergency fund requirement: 3 months of baseline expenses
+        BigDecimal monthlyBurn = expense.compareTo(BigDecimal.ZERO) > 0 ? expense : BigDecimal.ZERO;
+        BigDecimal emergencyFundTarget = monthlyBurn.multiply(BigDecimal.valueOf(3));
+        BigDecimal balanceAfterPurchase = totalLiquidBalance.subtract(immediateBalanceImpact);
+        boolean emergencyFundBreached = emergencyFundTarget.compareTo(BigDecimal.ZERO) > 0 &&
+                balanceAfterPurchase.compareTo(emergencyFundTarget) < 0;
+
         // Health score impact mathematically based on liquidity consumption ratio
         AnalyticsDTOs.FinancialHealth2DTO currentHealth = financialHealthService.getFinancialHealth();
+        int baseHealth = currentHealth != null ? currentHealth.getOverallScore() : 70;
         int healthDelta = 0;
         if (monthlySavings.compareTo(BigDecimal.ZERO) > 0) {
             double ratio = purchase.divide(monthlySavings, 2, RoundingMode.HALF_UP).doubleValue();
             if (ratio > 3.0) healthDelta = -6;
             else if (ratio > 1.0) healthDelta = -3;
             else healthDelta = -1;
+        } else {
+            healthDelta = -8; // Deficit penalty
+        }
+        if (emergencyFundBreached) {
+            healthDelta -= 4;
         }
 
         String pressureLevel;
         String recommendation;
         List<String> breakdown = new ArrayList<>();
 
-        breakdown.add("Immediate Outflow: ₹" + immediateBalanceImpact);
+        breakdown.add("Immediate Outflow: ₹" + immediateBalanceImpact.setScale(2, RoundingMode.HALF_UP));
+        breakdown.add("Balance After Outflow: ₹" + balanceAfterPurchase.setScale(2, RoundingMode.HALF_UP));
+
+        if (emergencyFundTarget.compareTo(BigDecimal.ZERO) > 0) {
+            if (emergencyFundBreached) {
+                breakdown.add("⚠ Emergency Fund Alert: Outflow cuts into your 3-month reserve target (₹" + emergencyFundTarget + ").");
+            } else {
+                breakdown.add("✓ Emergency Reserve Safe: 3+ months buffer (₹" + emergencyFundTarget + ") remains intact.");
+            }
+        }
+
         if (goalDelayMonths > 0) {
             breakdown.add("Estimated Goal Delay: ~" + String.format("%.1f", goalDelayMonths) + " months across active goals.");
+        } else if (!goals.isEmpty() && monthlySavings.compareTo(BigDecimal.ZERO) <= 0) {
+            breakdown.add("⚠ Current cash flow is in deficit; goal timelines are currently halted.");
         }
-        breakdown.add("Financial Health Score Impact: " + healthDelta + " points (from " + currentHealth.getOverallScore() + " to " + (currentHealth.getOverallScore() + healthDelta) + ").");
 
-        if (purchase.compareTo(currentSurplus) > 0) {
+        breakdown.add("Financial Health Score Impact: " + healthDelta + " points (from " + baseHealth + " to " + Math.max(0, baseHealth + healthDelta) + ").");
+
+        if (monthlySavings.compareTo(BigDecimal.ZERO) <= 0 || balanceAfterPurchase.compareTo(BigDecimal.ZERO) < 0) {
             pressureLevel = "CRITICAL";
-            recommendation = "Do not purchase immediately. Amount exceeds your current monthly liquid balance.";
-            breakdown.add("⚠ Purchase exceeds available monthly surplus balance.");
-        } else if (purchase.compareTo(monthlySavings.multiply(BigDecimal.valueOf(3))) > 0) {
+            recommendation = "Do not purchase immediately. Cash flow or liquid reserves are insufficient.";
+            breakdown.add("⚠ Outflow exceeds available liquid reserves or current cash flow is in deficit.");
+        } else if (emergencyFundBreached || (monthlySavings.compareTo(BigDecimal.ZERO) > 0 && purchase.compareTo(monthlySavings.multiply(BigDecimal.valueOf(3))) > 0)) {
             pressureLevel = "HIGH";
-            recommendation = "Consider delaying or funding gradually via a dedicated savings goal.";
-            breakdown.add("⚠ Purchase will consume more than 3 months of net savings.");
-        } else if (purchase.compareTo(monthlySavings) > 0) {
+            recommendation = "Affordable with caution: This purchase cuts into your safety buffer. Consider an EMI or phased savings.";
+            breakdown.add("⚠ Outflow will consume more than 3 months of net savings or dip into safety buffer.");
+        } else if (monthlySavings.compareTo(BigDecimal.ZERO) > 0 && purchase.compareTo(monthlySavings) > 0) {
             pressureLevel = "MODERATE";
             recommendation = "Affordable, but will pause net savings growth for this month.";
-            breakdown.add("ℹ Purchase is within current balance but exceeds single month savings.");
+            breakdown.add("ℹ Purchase is within liquid reserves but exceeds a single month's savings surplus.");
         } else {
             pressureLevel = "LOW";
-            recommendation = "Safely affordable within your current cash flow.";
+            recommendation = "Safely affordable within your current cash flow and liquid reserves.";
             breakdown.add("✓ Purchase fits comfortably within your monthly savings buffer.");
         }
 
@@ -123,3 +162,4 @@ public class DecisionCenterService {
                 .build();
     }
 }
+

@@ -5,6 +5,7 @@ import com.finance.budget.BudgetRepository;
 import com.finance.recurring.RecurringCostNormalizer;
 import com.finance.recurring.RecurringRepository;
 import com.finance.recurring.RecurringTransaction;
+import com.finance.transaction.Transaction;
 import com.finance.transaction.TransactionRepository;
 import com.finance.transaction.TransactionType;
 import com.finance.user.User;
@@ -50,9 +51,22 @@ public class ForecastingService {
         int totalDays = ym.lengthOfMonth();
         int dayOfMonth = Math.max(1, now.getDayOfMonth());
 
-        // 1. Component 1: Current month run rate (40%)
-        BigDecimal dailyRunRate = expense.divide(BigDecimal.valueOf(dayOfMonth), 2, RoundingMode.HALF_UP);
-        BigDecimal runRateProjection = dailyRunRate.multiply(BigDecimal.valueOf(totalDays));
+        // Normalized recurring obligations
+        List<RecurringTransaction> recurringList = recurringRepository.findByUser(user);
+        BigDecimal normalizedRecurring = RecurringCostNormalizer.sumMonthly(recurringList);
+
+        // Find recurring expenses already recorded this month to avoid run-rate distortion & double-counting
+        List<Transaction> monthTransactions = transactionRepository.findByUserAndDateBetweenOrderByDateDesc(user, from, to);
+        BigDecimal recurringIncurredThisMonth = monthTransactions.stream()
+                .filter(t -> t.getType() == TransactionType.EXPENSE && t.getDescription() != null && t.getDescription().contains("(Recurring)"))
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 1. Component 1: Discretionary run rate + fixed obligations (50%)
+        BigDecimal discretionaryExpense = expense.subtract(recurringIncurredThisMonth).max(BigDecimal.ZERO);
+        BigDecimal dailyDiscretionaryRate = discretionaryExpense.divide(BigDecimal.valueOf(dayOfMonth), 2, RoundingMode.HALF_UP);
+        BigDecimal projectedDiscretionary = dailyDiscretionaryRate.multiply(BigDecimal.valueOf(totalDays));
+        BigDecimal runRateProjection = projectedDiscretionary.add(normalizedRecurring);
 
         // 2. Component 2: Historical 6-month average (30%)
         List<BigDecimal> pastExpenses = new ArrayList<>();
@@ -75,15 +89,10 @@ public class ForecastingService {
         if (lastMonthExp == null) lastMonthExp = historicalAvg;
         BigDecimal recentTrendProjection = lastMonthExp;
 
-        // 4. Component 4: Normalized recurring obligations (10%)
-        List<RecurringTransaction> recurringList = recurringRepository.findByUser(user);
-        BigDecimal normalizedRecurring = RecurringCostNormalizer.sumMonthly(recurringList);
-
-        // Weighted Average Calculation: 40% run rate, 30% historical, 20% recent trend, 10% recurring
-        BigDecimal weightedExpense = runRateProjection.multiply(BigDecimal.valueOf(0.40))
+        // Weighted Average Calculation: 50% run-rate projection, 30% historical, 20% recent trend
+        BigDecimal weightedExpense = runRateProjection.multiply(BigDecimal.valueOf(0.50))
                 .add(historicalAvg.multiply(BigDecimal.valueOf(0.30)))
                 .add(recentTrendProjection.multiply(BigDecimal.valueOf(0.20)))
-                .add(normalizedRecurring.multiply(BigDecimal.valueOf(0.10)))
                 .setScale(2, RoundingMode.HALF_UP);
 
         // Ensure projection is at least current month expense

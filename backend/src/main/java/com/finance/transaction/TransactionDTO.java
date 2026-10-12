@@ -16,6 +16,8 @@ public class TransactionDTO {
     private String categoryName;
     private Long accountId;
     private String accountName;
+    private Long destinationAccountId;
+    private String destinationAccountName;
     private PaymentMethod paymentMethod;
     private String merchant;
     private Set<String> tags;

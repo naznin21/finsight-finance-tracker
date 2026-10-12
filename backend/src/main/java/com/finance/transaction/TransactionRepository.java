@@ -17,6 +17,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
 
     List<Transaction> findByUserAndDateBetweenOrderByDateDesc(User user, LocalDate from, LocalDate to);
 
+    boolean existsByUserAndDateAndAmountAndDescription(User user, LocalDate date, BigDecimal amount, String description);
+
     @Query("SELECT t.category.name, SUM(t.amount) FROM Transaction t " +
            "WHERE t.user = :user AND t.type = 'EXPENSE' AND t.date BETWEEN :from AND :to " +
            "GROUP BY t.category.name ORDER BY SUM(t.amount) DESC")

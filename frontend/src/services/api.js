@@ -16,13 +16,17 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Auto-logout on 401
+// Auto-logout on 401 Unauthorized or 403 Forbidden (token expired or invalidated)
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('user')
-      window.location.href = '/login'
+    const status = err.response?.status
+    if (status === 401 || status === 403) {
+      const isAuthRoute = window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/register')
+      if (!isAuthRoute) {
+        localStorage.removeItem('user')
+        window.location.href = '/login?expired=true'
+      }
     }
     return Promise.reject(err)
   }

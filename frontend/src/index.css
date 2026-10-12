@@ -9,64 +9,97 @@ html, body, #root {
 }
 
 body {
-  @apply bg-bg text-slate-100;
-  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  @apply bg-[#070b14] text-slate-100;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #080d1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }
 
 @layer components {
   /* Inputs */
   .input {
-    @apply w-full bg-panel2 border border-line rounded-lg px-3 py-2.5 text-sm text-slate-100
-           placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/60 focus:border-accent
+    @apply w-full bg-[#111c35] border border-[#1e2a47] rounded-xl px-3.5 py-2.5 text-sm text-slate-100
+           placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500
            transition;
   }
   .label {
-    @apply block text-xs font-medium text-muted mb-1.5;
+    @apply block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider;
   }
 
   /* Buttons */
   .btn-primary {
-    @apply bg-accent text-[#04222b] rounded-lg px-4 py-2.5 text-sm font-semibold
-           hover:bg-accentDark transition disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl px-4 py-2.5 text-sm font-semibold
+           shadow-md shadow-indigo-600/20 transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2;
   }
   .btn-secondary {
-    @apply bg-panel2 border border-line text-slate-200 rounded-lg px-4 py-2.5 text-sm font-medium
-           hover:bg-line transition;
+    @apply bg-[#111c35] border border-[#1e2a47] text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium
+           hover:bg-[#182747] hover:border-slate-600 transition active:scale-[0.98] flex items-center justify-center gap-2;
+  }
+  .btn-ghost {
+    @apply text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg px-2.5 py-1.5 text-xs font-medium transition;
   }
   .btn-danger-link {
-    @apply text-expense text-xs hover:underline;
+    @apply text-rose-400 text-xs hover:text-rose-300 hover:underline;
   }
   .btn-edit-link {
-    @apply text-accent text-xs hover:underline;
+    @apply text-indigo-400 text-xs hover:text-indigo-300 hover:underline;
   }
 
-  /* Cards / surfaces */
+  /* Cards / Surfaces */
   .card {
-    @apply bg-panel border border-line rounded-2xl p-5;
+    @apply bg-[#0f172a] border border-[#1e293b] rounded-2xl p-5 shadow-sm;
+  }
+  .card-glow {
+    @apply bg-[#0f172a] border border-[#1e293b] rounded-2xl p-5 shadow-md shadow-indigo-950/20 hover:border-indigo-500/40 transition;
   }
 
   /* Tables */
   .table-head {
-    @apply bg-panel2 text-muted text-xs uppercase tracking-wide;
+    @apply bg-[#0b1324] text-slate-400 text-xs uppercase tracking-wider font-semibold;
   }
   .table-row {
-    @apply border-t border-line hover:bg-panel2/60 transition;
+    @apply border-t border-[#1e293b] hover:bg-[#111c35]/50 transition;
   }
 
-  /* Nav pill (sidebar) */
+  /* Nav Links (Sidebar) */
   .nav-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted
-           hover:bg-panel2 hover:text-slate-100 transition;
+    @apply flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400
+           hover:bg-[#111c35] hover:text-slate-100 transition;
   }
   .nav-link-active {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-           bg-accent/15 text-accent;
+    @apply flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold
+           bg-indigo-600 text-white shadow-md shadow-indigo-600/25;
   }
 
+  /* Status Badges */
   .badge-income {
-    @apply px-2 py-0.5 rounded-full text-xs font-medium bg-income/15 text-income;
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1;
   }
   .badge-expense {
-    @apply px-2 py-0.5 rounded-full text-xs font-medium bg-expense/15 text-expense;
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/20 inline-flex items-center gap-1;
+  }
+  .badge-transfer {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/20 inline-flex items-center gap-1;
+  }
+  .badge-violet {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 inline-flex items-center gap-1;
+  }
+  .badge-amber {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/20 inline-flex items-center gap-1;
   }
 }

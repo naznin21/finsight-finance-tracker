@@ -59,7 +59,12 @@ public class BudgetService {
     }
 
     public void delete(Long id) {
-        budgetRepository.deleteById(id);
+        Budget budget = budgetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Budget not found."));
+        if (!budget.getUser().getEmail().equals(currentUser().getEmail())) {
+            throw new RuntimeException("Access denied.");
+        }
+        budgetRepository.delete(budget);
     }
 
     // Runs on 1st of every month at midnight to roll over unspent budgets

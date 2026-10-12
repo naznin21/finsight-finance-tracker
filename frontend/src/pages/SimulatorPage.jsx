@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { simulateScenario } from '../services/api'
 import Layout from '../components/Layout'
-import CopilotWidget from '../components/CopilotWidget'
 import { SlidersHorizontal, ArrowRight, TrendingUp, Target, Sparkles, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -202,8 +201,6 @@ export default function SimulatorPage() {
           )}
         </div>
       </div>
-
-      <CopilotWidget />
     </Layout>
   )
 }

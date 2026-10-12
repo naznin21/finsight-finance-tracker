@@ -41,6 +41,10 @@ public class Transaction {
     @JoinColumn(name = "account_id")
     private com.finance.account.Account account;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "destination_account_id")
+    private com.finance.account.Account destinationAccount;
+
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
