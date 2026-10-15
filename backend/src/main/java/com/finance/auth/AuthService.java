@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -60,7 +61,6 @@ public class AuthService {
         sendOtp(req.getEmail());
     }
 
-    @Transactional
     public void sendOtp(String email) {
         log.info("Sending OTP to: {}", email);
 
@@ -80,19 +80,18 @@ public class AuthService {
         user.setOtpVerified(false);
         userRepository.save(user);
 
-        // Send OTP via email
+        // Send OTP via email (async - non-blocking)
         String emailBody = String.format(
                 "Hello %s,\n\n" +
                         "Your OTP for email verification is: %s\n\n" +
                         "This OTP is valid for 10 minutes.\n\n" +
-                        "Please use this OTP to verify your email: /api/auth/verify-otp?email=%s&otp=%s\n\n" +
                         "Regards,\n" +
-                        "Finance App Team",
-                user.getName(), otp, email, otp
+                        "FinSight Team",
+                user.getName(), otp
         );
 
         sendEmail(email, "Your OTP for Email Verification", emailBody);
-        log.info("OTP sent successfully to: {}", email);
+        log.info("OTP queued for delivery to: {}", email);
     }
 
     @Transactional
@@ -223,17 +222,18 @@ public class AuthService {
         return String.valueOf(otp);
     }
 
-    private void sendEmail(String to, String subject, String text) {
+    @Async
+    public void sendEmail(String to, String subject, String text) {
         try {
             SimpleMailMessage msg = new SimpleMailMessage();
             msg.setTo(to);
             msg.setSubject(subject);
             msg.setText(text);
             mailSender.send(msg);
-            log.debug("Email sent to: {}", to);
+            log.info("Email sent successfully to: {}", to);
         } catch (Exception e) {
-            log.error("Failed to send email to {}: {}", to, e.getMessage());
-            throw new RuntimeException("Failed to send email. Please try again later.");
+            // Log but do NOT throw - email failure must not block registration/login
+            log.error("Failed to send email to {} (non-fatal): {}", to, e.getMessage());
         }
     }
 }
