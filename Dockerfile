@@ -20,7 +20,7 @@ COPY backend/pom.xml ./
 COPY backend/src ./src
 
 # Incorporate compiled frontend static bundle into Spring Boot static classpath
-COPY --from=frontend-builder /app/backend/src/main/resources/static ./src/main/resources/static
+COPY --from=frontend-builder /app/frontend/dist ./src/main/resources/static
 
 RUN mvn clean package -DskipTests
 
@@ -38,4 +38,5 @@ COPY --from=backend-builder /app/backend/target/*.jar app.jar
 ENV PORT=8082
 EXPOSE 8082
 
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+# Pass PORT env var so Spring Boot binds to Render's dynamic port
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-Dserver.port=${PORT}", "-jar", "app.jar"]
